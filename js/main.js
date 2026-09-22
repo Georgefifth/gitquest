@@ -19,6 +19,9 @@ const progress = (() => {
 })();
 const save = () => localStorage.setItem(SAVE_KEY, JSON.stringify(progress));
 
+// ?unlock — jump to any level (demo/review convenience; still needs solving)
+if (new URLSearchParams(location.search).has("unlock")) progress.unlocked = LEVELS.length - 1;
+
 // ---------- screens ----------
 
 const screens = { boot: $("#boot-screen"), select: $("#select-screen"), play: $("#play-screen") };

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,monospace; }
+  .slide {
+    width: 1920px; height: 1080px;
+    background: #0a0e0a;
+    color: #b8f0b0;
+    position: relative;
+    overflow: hidden;
+    padding: 110px 140px 220px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  /* faint phosphor grid */
+  .slide::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(58,255,110,.045) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(58,255,110,.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .slide::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.5));
+  }
+  .slide > * { position: relative; z-index: 1; }
+
+  .kicker { color: #5e8a58; letter-spacing: .5em; font-size: 26px; text-transform: uppercase; }
+  h1 { color: #3aff6e; font-size: 92px; line-height: 1.05; margin: 26px 0; text-shadow: 0 0 24px rgba(58,255,110,.4); }
+  h1.huge { font-size: 150px; letter-spacing: .02em; }
+  .sub { color: #b8f0b0; font-size: 38px; line-height: 1.4; }
+  .dim { color: #5e8a58; }
+  .accent { color: #ffce4a; }
+  .cyan { color: #45e0d8; }
+  .violet { color: #c792ea; }
+  .foot { position: absolute; left: 140px; bottom: 210px; color: #5e8a58; font-size: 24px; letter-spacing: .15em; z-index: 1; }
+  .prompt { color: #45e0d8; } .prompt b { color: #3aff6e; }
+
+  /* fake terminal card */
+  .termcard {
+    background: #060906; border: 1px solid #1e331e; border-radius: 14px;
+    padding: 34px 40px; font-size: 26px; line-height: 1.75; color: #b8f0b0;
+    box-shadow: 0 0 40px rgba(58,255,110,.08);
+  }
+  .termcard .red { color: #ff5f56; } .termcard .green { color: #3aff6e; } .termcard .yellow { color: #ffce4a; }
+  .dots span { display:inline-block; width:14px; height:14px; border-radius:50%; margin-right:10px; }
+  .dots .r{background:#ff5f56}.dots .y{background:#ffce4a}.dots .g{background:#3aff6e}
+
+  .row { display: flex; gap: 60px; align-items: center; }
+  .col { flex: 1; }
+
+  .pain { border-left: 3px solid #1e331e; padding: 18px 0 18px 30px; margin: 22px 0; font-size: 30px; }
+  .pain b { color: #3aff6e; font-weight: 700; display: block; font-size: 34px; }
+  .pain em { color: #ff5f56; font-style: normal; }
+
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 60px 0 20px; }
+  .step {
+    flex: 1; border: 1px solid #1e331e; background: #101a10; border-radius: 14px;
+    padding: 30px 26px; font-size: 24px; line-height: 1.5;
+  }
+  .step b { color: #3aff6e; display: block; font-size: 28px; margin-bottom: 10px; }
+  .step small { color: #5e8a58; font-size: 20px; }
+  .arrow { align-self: center; color: #3aff6e; font-size: 44px; padding: 0 18px; }
+
+  .stats { display: flex; gap: 40px; margin-top: 50px; }
+  .stat { flex: 1; border: 1px solid #1e331e; background: #101a10; border-radius: 14px; padding: 34px; text-align: center; }
+  .stat b { color: #3aff6e; font-size: 64px; display: block; }
+  .stat span { color: #5e8a58; font-size: 22px; }
+
+  .url { color: #45e0d8; font-size: 52px; border: 2px solid #45e0d8; border-radius: 14px;
+         display: inline-block; padding: 20px 44px; margin-top: 36px; }
+  .graphline { margin-top: 50px; font-size: 30px; color: #5e8a58; letter-spacing: .1em;
+               font-family: inherit; white-space: pre; }
+  .graphline b { color: #ffce4a; } .graphline .cyan { color: #45e0d8; }
+</style>
+</head>
+<body>
+
+<div class="slide" id="s-cover">
+  <div class="kicker">Beginner's Paradise — FirstCommit</div>
+  <h1 class="huge">GITQUEST</h1>
+  <div class="sub">a terminal adventure about your <span class="accent">first commit</span><br>
+  <span class="dim">type real git commands · watch history draw itself</span></div>
+  <div class="graphline"><b>●</b>──<b>●</b>──<b>●</b>──<b>◆</b> main
+      ╰──<span class="cyan">●</span>──<span class="cyan">●</span> feature</div>
+  <div class="foot">georgefifth.github.io/gitquest</div>
+</div>
+
+<div class="slide" id="s-problem">
+  <div class="row">
+    <div class="col">
+      <div class="kicker">the problem</div>
+      <h1 style="font-size:78px">git is every beginner's<br>first boss fight</h1>
+      <div class="pain" style="font-size:27px"><b>tutorials teach commands,</b> not mental models</div>
+      <div class="pain" style="font-size:27px"><b>one wrong flag,</b> and the error log is a <em>wall of red</em></div>
+      <div class="pain" style="font-size:27px"><b>so beginners learn fear,</b> not version control</div>
+    </div>
+    <div class="col">
+      <div class="termcard">
+        <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div><br>
+        <span class="prompt">~ <b>$</b></span> git rebase main<br>
+        <span class="red">error: cannot rebase: You have unstaged changes.<br>
+        error: Please commit or stash them.</span><br>
+        <span class="prompt">~ <b>$</b></span> git reflog<br>
+        <span class="dim">(scrolls past 40 lines of hashes)</span><br>
+        <span class="prompt">~ <b>$</b></span> <span class="yellow">what did i just do</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="slide" id="s-how">
+  <div class="kicker">the idea</div>
+  <h1>learn git by <span class="cyan">playing</span> it</h1>
+  <div class="flow">
+    <div class="step"><b>type real commands</b>init · add · commit · merge · rebase<small><br>an actual parser, not a quiz</small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>mini-git engine</b>branches, staging, merge bases,<br>conflict markers<small> — all simulated</small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>live graph</b>every commit draws itself on an<br>animated SVG tree<small> in real time</small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>structural match</b>beat the level when your <em>history's shape</em><br>matches the target<small> — any valid path wins</small></div>
+  </div>
+  <div class="sub dim" style="font-size:30px">wrong turn? the game <span class="accent">warns you</span>, and <span class="accent">undo</span> pops the commit — fear becomes experiments.</div>
+  <div class="foot">11 levels · sandbox mode · par-star scoring</div>
+</div>
+
+<div class="slide" id="s-inside">
+  <div class="kicker">how it's built</div>
+  <h1>built like the thing it teaches</h1>
+  <div class="sub dim">a real state machine, not a scripted toy — so the lessons transfer</div>
+  <div class="stats">
+    <div class="stat"><b>0</b><span>dependencies<br>vanilla JS + SVG</span></div>
+    <div class="stat"><b>82</b><span>automated checks<br>node + headless Firefox</span></div>
+    <div class="stat"><b>11</b><span>levels<br>init → push</span></div>
+    <div class="stat"><b>1</b><span>real merge conflict<br>to survive</span></div>
+  </div>
+  <div class="foot">merge bases · fast-forward · detached HEAD · fake remote</div>
+</div>
+
+<div class="slide" id="s-cta">
+  <div class="kicker">your move</div>
+  <h1 class="huge">play it.</h1>
+  <div class="url">georgefifth.github.io/gitquest</div>
+  <div class="sub" style="margin-top:40px"><span class="dim">source ·</span> github.com/Georgefifth/gitquest</div>
+  <div class="foot">built in one sprint · with an AI pair-programmer · disclosed in README</div>
+</div>
+
+</body>
+</html>
