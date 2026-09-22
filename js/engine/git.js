@@ -257,18 +257,13 @@ export class Repo {
   _add(args) {
     if (!args.length) return err("Nothing specified, nothing added.\nhint: use 'git add <file>' or 'git add .'");
     const all = args.includes(".") || args.includes("-A") || args.includes("--all");
-    let added = 0;
     if (all) {
-      for (const [f, c] of this.workdir) { this.staging.set(f, c); added++; }
+      for (const [f, c] of this.workdir) this.staging.set(f, c);
     } else {
       for (const f of args) {
-        if (this.workdir.has(f)) { this.staging.set(f, this.workdir.get(f)); added++; }
+        if (this.workdir.has(f)) this.staging.set(f, this.workdir.get(f));
         else return err(`fatal: pathspec '${f}' did not match any files`);
       }
-    }
-    if (this.mergeState) {
-      for (const f of args.length ? args : []) this.mergeState.conflicts.delete(f);
-      if (all) this.mergeState.conflicts.clear();
     }
     return ok([], { fs: true }); // staging never changes the graph
   }
@@ -284,14 +279,13 @@ export class Repo {
     const head = this.headCommit();
 
     if (this.mergeState) {
-      const conflicts = this.mergeState.conflicts;
-      // check markers are gone & conflicts staged
-      for (const f of conflicts) {
-        const content = this.staging.get(f) ?? this.workdir.get(f) ?? "";
-        if (content.includes(CONFLICT_MARK))
-          return err(`error: conflict markers still in '${f}' — edit it with echo, then git add ${f}`);
+      for (const f of this.mergeState.conflicts) {
+        if (!this.staging.has(f))
+          return err(`error: '${f}' is still unmerged — edit it, then git add ${f}`);
+        if (this.staging.get(f).includes(CONFLICT_MARK))
+          return err(`error: conflict markers still in '${f}' — rewrite it with echo, then git add ${f}`);
       }
-      const files = new Map(head.files);
+      const files = new Map(this.mergeState.merged);
       for (const [f, c] of this.staging) files.set(f, c);
       const parents = [head.id, this.mergeState.tip];
       const branch = this.headName();
@@ -483,7 +477,7 @@ export class Repo {
       this.branches.set(this.head.ref, c.id);
       return ok([L(`Merge made by the 'ort' strategy. (${c.hash})`, "ok")], { changed: true });
     }
-    this.mergeState = { branch: name, tip: other.id, conflicts };
+    this.mergeState = { branch: name, tip: other.id, conflicts, merged };
     return ok([L(`Auto-merging ${[...conflicts].join(", ")}`, "warn"),
                L(`CONFLICT (content): Merge conflict in ${[...conflicts].join(", ")}`, "err"),
                L("Automatic merge failed; fix conflicts and then commit the result.", "warn"),
@@ -585,7 +579,7 @@ export class Repo {
     this.remote.branches.set(branch, tip);
     return ok([L(`To ${this.remoteUrl}`, "dim"),
                L(`   ${remoteTip ? this.commits.get(remoteTip).hash : "(new)"}..${this.commits.get(tip).hash}  ${branch} -> ${branch}`, "ok"),
-               L("pushed! your work is out there 🚀", "info")], { changed: true });
+               L("pushed! your work is out there.", "info")], { changed: true });
   }
 
   _pull() {

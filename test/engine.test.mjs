@@ -60,6 +60,8 @@ console.log("== merge ==");
   const res3 = cf.exec("git merge t");
   t("conflict detected", res3.ok && cf.mergeState?.conflicts.has("c.txt"));
   t("commit blocked by markers", !cf.exec('git commit -m "m"').ok);
+  run(cf, ["git add c.txt"]); // staged but markers still inside
+  t("staged markers still blocked", !cf.exec('git commit -m "m"').ok);
   run(cf, ['echo "v2" > c.txt', "git add c.txt"]);
   const done = cf.exec('git commit -m "merge t"');
   t("resolve merge", done.ok && cf.headCommit().parents.length === 2 && !cf.mergeState);

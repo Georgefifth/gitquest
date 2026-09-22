@@ -260,7 +260,7 @@ export const LEVELS = [
       "echo \"more\" >> work.txt",
       "git add work.txt",
       "git commit -m \"wip 2\"",
-      "echo \"🔥\" >> work.txt",
+      "echo \"chaos\" >> work.txt",
       "git add work.txt",
       "git commit -m \"oops broke everything\"",
     ],
