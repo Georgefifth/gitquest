@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitQuest — a terminal adventure</title>
+<meta name="description" content="Learn Git by playing it. Type real git commands, watch the commit graph come alive." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⑂</text></svg>" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ============ BOOT SCREEN ============ -->
+<section id="boot-screen" class="screen active">
+  <pre id="boot-log" class="boot-log" aria-live="polite"></pre>
+  <div id="boot-title" class="boot-title hidden">
+    <pre class="ascii">
+   ▄████  ▄█ ▀███▄   ▄████▄  █   ▀█▀ ▄████
+  ██  ██  ██  ██      ██ ▀██  ██   █  ██ ▀
+  ██  ▀▀  ██  ██      ██  ██  ██   █  ██
+  ██  ▄█  ██  ██      ██ ▄██  ██   █  ██▄
+   ▀███▀  ██  ██       ▀██▀    ▀██▀   ▀███▀</pre>
+    <p class="subtitle">a terminal adventure about your first commit</p>
+    <p class="press-enter blink">press <kbd>enter</kbd> to boot</p>
+  </div>
+</section>
+
+<!-- ============ LEVEL SELECT ============ -->
+<section id="select-screen" class="screen">
+  <header class="select-header">
+    <h1>GITQUEST</h1>
+    <p class="select-sub">every level is a commit on your journey — reach the end to ship it</p>
+  </header>
+  <div id="level-timeline" class="level-timeline" role="list"></div>
+  <footer class="select-footer">
+    <button id="btn-sandbox" class="ghost-btn">sandbox mode</button>
+    <button id="btn-reset-progress" class="ghost-btn danger">reset progress</button>
+  </footer>
+</section>
+
+<!-- ============ PLAY SCREEN ============ -->
+<section id="play-screen" class="screen">
+  <header class="play-header">
+    <button id="btn-back" class="ghost-btn" title="back to timeline">◂ map</button>
+    <div class="play-title">
+      <span id="lvl-num" class="lvl-num"></span>
+      <span id="lvl-title"></span>
+    </div>
+    <div class="play-actions">
+      <button id="btn-goal" class="ghost-btn" title="show objective (g)">objective</button>
+      <button id="btn-hint" class="ghost-btn" title="hint (h)">hint <span id="hint-count"></span></button>
+      <button id="btn-reset-level" class="ghost-btn" title="restart level">↺ reset</button>
+      <button id="btn-sound" class="ghost-btn" title="toggle sound">♪</button>
+    </div>
+  </header>
+
+  <main class="play-main">
+    <div class="term-wrap">
+      <div id="terminal" class="terminal" tabindex="0" aria-label="terminal — click and type git commands">
+        <div id="term-out" class="term-out"></div>
+        <div class="term-inputline">
+          <span id="prompt" class="prompt">~/repo <b>$</b></span>
+          <input id="term-in" class="term-in" type="text" autocomplete="off"
+                 autocapitalize="off" spellcheck="false" aria-label="command input" />
+        </div>
+      </div>
+      <p class="term-tip">type <code>help</code> if you get lost · <code>↑</code> recalls commands · <code>tab</code> completes</p>
+    </div>
+
+    <aside class="side">
+      <div class="panel objective-panel">
+        <h2>OBJECTIVE</h2>
+        <div id="objective-text" class="objective-text"></div>
+        <div id="target-graph" class="graph-box" aria-label="target commit graph"></div>
+        <p class="graph-caption">▲ target</p>
+      </div>
+      <div class="panel live-panel">
+        <h2>YOUR REPO <span id="live-status" class="live-status"></span></h2>
+        <div id="live-graph" class="graph-box" aria-label="your commit graph"></div>
+      </div>
+    </aside>
+  </main>
+</section>
+
+<!-- ============ LEVEL COMPLETE ============ -->
+<div id="complete-modal" class="modal hidden" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <pre class="modal-ascii">
+  ▄▄▄  ▄▄▄  ▄▄ ▄▄
+  █  █ █▄▄█  █ █ █
+  █  █ █  █  █   █
+  ▀▀▀▀  ▀  ▀  ▀   ▀</pre>
+    <h2>COMMIT ACCEPTED</h2>
+    <p id="complete-msg"></p>
+    <p id="complete-stats" class="complete-stats"></p>
+    <div class="modal-btns">
+      <button id="btn-replay" class="ghost-btn">replay</button>
+      <button id="btn-tomap" class="ghost-btn">map</button>
+      <button id="btn-next" class="primary-btn">next level ▸</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
