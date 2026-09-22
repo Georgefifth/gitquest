@@ -90,13 +90,24 @@ export function graphsEqual(a, b, strict = false) {
 // Commits are append-only (reachable ones), so the player's signature
 // multiset must be a sub-multiset of the goal's.
 export function goalReachable(player, goal, strict = false) {
+  const sigP = commitSignatures(player, strict);
   const sigG = commitSignatures(goal, strict);
   const budget = new Map();
   for (const s of sigG.values()) budget.set(s, (budget.get(s) ?? 0) + 1);
-  for (const s of commitSignatures(player, strict).values()) {
+  for (const s of sigP.values()) {
     const n = budget.get(s) ?? 0;
     if (n === 0) return false;
     budget.set(s, n - 1);
   }
+  // tags and remote branches are pointers, but stray ones block equality and
+  // can't be removed by committing — count them toward reachability too.
+  const ptrSubset = (pm, gm) => {
+    for (const [name, tip] of pm)
+      if (!gm.has(name) || sigP.get(tip) !== sigG.get(gm.get(name))) return false;
+    return true;
+  };
+  if (!ptrSubset(player.tags, goal.tags)) return false;
+  if (!ptrSubset(player.remote?.branches ?? new Map(), goal.remote?.branches ?? new Map()))
+    return false;
   return true;
 }

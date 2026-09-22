@@ -32,7 +32,10 @@ ES modules require a server — opening index.html via file:// will not work.
 ## Test
 
 ```bash
-node test/engine.test.mjs      # engine logic + every level solved by its own solution script
+npm test                       # node test/engine.test.mjs — engine + level solvability
+npm run playtest               # node test/playtest.mjs — headless Firefox full run
+                               # (needs: npm i -D playwright && npx playwright install firefox,
+                               #  and a static server on :8000)
 ```
 
 ## Layout

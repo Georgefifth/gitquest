@@ -186,7 +186,8 @@ button { font-family: var(--mono); cursor: pointer; }
 }
 .play-title { flex: 1; font-weight: 700; letter-spacing: .06em; }
 .lvl-num { color: var(--ink-dim); margin-right: 10px; }
-.play-actions { display: flex; gap: 8px; }
+.play-actions { display: flex; gap: 8px; align-items: center; }
+.move-count { color: var(--ink-faint); font-size: 12px; min-width: 9ch; text-align: right; }
 
 .play-main {
   flex: 1;

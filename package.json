@@ -1,0 +1,13 @@
+{
+  "name": "gitquest",
+  "version": "0.1.0",
+  "description": "Learn Git by playing it — a terminal adventure about your first commit",
+  "scripts": {
+    "test": "node test/engine.test.mjs",
+    "playtest": "node test/playtest.mjs"
+  },
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}

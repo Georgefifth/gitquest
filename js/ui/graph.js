@@ -133,5 +133,6 @@ export function renderGraph(container, view, opts = {}) {
   }
 
   container.appendChild(svg);
+  container.scrollTop = 0;
   container._prevIds = new Set(view.commits.map(c => c.id));
 }

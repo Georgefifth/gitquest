@@ -15,11 +15,16 @@ so there's more than one right answer.
 
 - **11 levels**: `init` → first commit → branching → merging → **resolving a real
   merge conflict** → tagging → rebasing → `reset --hard` time travel → `git push`.
-- **Star ratings**: finish a level in ≤ par commands for ★★★.
+- **Star ratings** (Git-Golf style): finish a level in ≤ par commands for ★★★.
+  Peeking at `solution` caps you at ★ — understanding > copying.
 - **Sandbox mode**: a free repo with every command unlocked.
 - Live commit graph with branch labels, HEAD marker, remote branches and tags.
 - Tab-completion, command history, hints, and a forgiving engine that explains
   *why* git refused.
+- Safety nets: `undo` (pops your last commit — even the root), `reset`, and an
+  automatic warning when your history can't reach the target anymore.
+- Meta commands: `hint` `objective` `solution` `undo` `reset` `map` — plus git
+  extras like `git tag -d`, `git push --delete`, `git remote remove`.
 
 ## Run it
 
@@ -42,8 +47,9 @@ are synthesized with **WebAudio** — zero audio assets. Progress persists in
 The git simulation (`js/engine/git.js`) is a real state machine: commits,
 branches, HEAD (incl. detached), staging area, merge bases, fast-forward vs.
 true merges, conflict markers, rebases, tags and a fake remote — all pure JS,
-unit-tested in node (`node test/engine.test.mjs`, 42 assertions incl. proof
-that every level is solvable).
+unit-tested in node (`npm test`, 50+ assertions incl. proof that every level
+is solvable). An end-to-end playtest drives headless Firefox through all 11
+levels plus every button (`npm run playtest`, needs `npm i -D playwright`).
 
 ## Project layout
 

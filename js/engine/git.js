@@ -232,7 +232,8 @@ export class Repo {
     this.branches.set("main", null);
     this.head = { type: "branch", ref: "main" };
     return ok([L("Initialized empty Git repository in ~/repo/.git/", "ok"),
-               L("hint: create a file with `touch name`, then `git add` + `git commit -m \"msg\"`", "dim")]);
+               L("hint: create a file with `touch name`, then `git add` + `git commit -m \"msg\"`", "dim")],
+              { changed: true });
   }
 
   _status() {
@@ -271,8 +272,8 @@ export class Repo {
   _commitCmd(args) {
     const mIdx = args.findIndex(a => a === "-m" || a === "--message");
     let message = null;
-    if (mIdx >= 0) message = args[mIdx + 1] ?? "";
-    else if (args[0] && !args[0].startsWith("-")) message = args[0]; // lenient: `git commit msg`
+    if (mIdx >= 0) message = args.slice(mIdx + 1).join(" ");
+    else if (args[0] && !args[0].startsWith("-")) message = args.join(" "); // lenient: `git commit msg`
     if (message === null || message === "")
       return err("Aborting commit — you need a message.\nhint: git commit -m \"your message\"");
 
@@ -545,6 +546,12 @@ export class Repo {
     if (!args.length) {
       return ok([...this.tags.keys()].map(t => L(t, "branch")));
     }
+    if (args[0] === "-d" || args[0] === "--delete") {
+      const name = args[1];
+      if (!name || !this.tags.has(name)) return err(`error: tag '${name ?? ""}' not found`);
+      this.tags.delete(name);
+      return ok([L(`Deleted tag '${name}'`, "dim")], { changed: true });
+    }
     const name = args[0];
     const id = this._resolveRef(args[1] ?? "HEAD");
     if (!id) return err("fatal: no commit to tag");
@@ -558,17 +565,33 @@ export class Repo {
       if (!name || !url) return err("usage: git remote add <name> <url>");
       this.remoteUrl = url;
       this.remote = this.remote || { branches: new Map() };
-      return ok([L(`remote '${name}' → ${url}`, "dim")]);
+      return ok([L(`remote '${name}' → ${url}`, "dim")], { changed: true });
     }
     if (args[0] === "-v" || !args.length)
       return ok(this.remoteUrl ? [L(`origin\t${this.remoteUrl} (fetch)`, "dim"), L(`origin\t${this.remoteUrl} (push)`, "dim")] : []);
+    if (args[0] === "remove" || args[0] === "rm") {
+      this.remoteUrl = null;
+      this.remote = null;
+      return ok([L("remote removed", "dim")], { changed: true });
+    }
     return err(`git remote: unknown subcommand '${args[0]}'`);
   }
 
   _push(args) {
     if (!this.remote) return err("fatal: no configured push destination.\nhint: git remote add origin https://gitquest.dev/repo.git");
-    let branch = null;
-    for (const a of args) if (a !== "origin" && !a.startsWith("-")) branch = a;
+    let branch = null, del = false;
+    for (const a of args) {
+      if (a === "origin" || a === "-u" || a === "--set-upstream") continue;
+      if (a === "--delete" || a === "-d") { del = true; continue; }
+      if (a.startsWith(":")) { del = true; branch = a.slice(1); continue; }
+      if (!a.startsWith("-")) branch = a;
+    }
+    if (del) {
+      if (!branch || !this.remote.branches.has(branch))
+        return err(`error: unable to delete '${branch ?? ""}': remote ref does not exist`);
+      this.remote.branches.delete(branch);
+      return ok([L(` - [deleted]         ${branch}`, "warn")], { changed: true });
+    }
     branch = branch ?? this.headName();
     if (!branch || !this.branches.has(branch)) return err(`error: src refspec ${branch} does not match any`);
     const tip = this.branches.get(branch);
@@ -611,6 +634,28 @@ export class Repo {
       }
     }
     return ok(lines.length ? lines : [L("(no unstaged changes)", "dim")]);
+  }
+
+  // game QoL: undo the commit HEAD sits on (not a real git command).
+  // Works even on a root commit — branch goes back to unborn.
+  undo() {
+    const h = this.headCommit();
+    if (!h) return err("nothing to undo");
+    const parent = h.parents[0] ?? null;
+    if (this.head.type === "branch") this.branches.set(this.head.ref, parent);
+    if (parent) {
+      if (this.head.type === "detached") this.head = { type: "detached", ref: parent };
+      this._loadWorkdir(this.commits.get(parent));
+    } else {
+      this.workdir.clear();
+      this.staging.clear();
+      if (this.head.type === "detached") {   // nowhere to stand — hop to main
+        if (!this.branches.has("main")) this.branches.set("main", null);
+        this.head = { type: "branch", ref: "main" };
+      }
+    }
+    this.mergeState = null;
+    return ok([L(`undid ${h.hash} "${h.message}"`, "warn")], { changed: true });
   }
 
   // commits reachable from branches, HEAD, tags, remote — the rest is garbage

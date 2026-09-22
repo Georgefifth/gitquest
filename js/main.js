@@ -106,6 +106,7 @@ function replayInto(repo, cmds, { silent = false } = {}) {
 }
 
 function startLevel(idx) {
+  $("#complete-modal").classList.add("hidden");
   const level = idx === -1 ? SANDBOX : LEVELS[idx];
   const repo = new Repo();
   const goal = new Repo();
@@ -160,6 +161,9 @@ function renderLive() {
   const head = game.repo.head.type === "branch" ? game.repo.head.ref : game.repo.head.ref?.slice(0, 12);
   const safe = String(head ?? "?").replace(/[<>&"']/g, "");
   term.setPrompt(`~/repo${game.repo.initialized ? ` (${safe})` : ""}`);
+  const moves = $("#move-count");
+  if (moves) moves.textContent =
+    game.idx === -1 ? `moves ${game.cmdCount}` : `moves ${game.cmdCount} · par ${game.level.par}`;
   const match = game.idx !== -1 && graphsEqual(game.repo, game.goal, !!game.level.strict);
   $("#live-status").textContent = match ? "● matches target" : "";
   $("#live-status").className = "live-status" + (match ? " match" : "");
@@ -184,7 +188,8 @@ function confetti() {
 
 function win() {
   game.done = true;
-  const stars = game.cmdCount <= game.level.par ? 3 : game.cmdCount <= game.level.par + 3 ? 2 : 1;
+  let stars = game.cmdCount <= game.level.par ? 3 : game.cmdCount <= game.level.par + 3 ? 2 : 1;
+  if (game.usedSolution) stars = Math.min(stars, 1);
   const prev = progress.stars[game.level.id] ?? 0;
   progress.stars[game.level.id] = Math.max(prev, stars);
   progress.unlocked = Math.max(progress.unlocked, game.idx + 1);
@@ -195,9 +200,11 @@ function win() {
   $("#complete-msg").textContent =
     `"${game.level.title}" — ${stars === 3 ? "flawless run." : stars === 2 ? "solid work." : "messy, but it works — that's real git too."}`;
   $("#complete-stats").textContent =
-    `${game.cmdCount} commands · par ${game.level.par} · ${"★".repeat(stars)}${"☆".repeat(3 - stars)}`;
+    `${game.cmdCount} commands · par ${game.level.par} · ${"★".repeat(stars)}${"☆".repeat(3 - stars)}` +
+    (game.usedSolution ? " · peeked at solution" : "");
   $("#btn-next").textContent = game.idx + 1 < LEVELS.length ? "next level ▸" : "roll credits ▸";
   $("#complete-modal").classList.remove("hidden");
+  term.input.blur(); // Enter on the modal should hit "next", not the terminal
 }
 
 // ---------- meta commands ----------
@@ -213,9 +220,14 @@ const META = {
     term.print(L("▸ " + (game.level.task || "free play"), "ok"));
   },
   goal() { META.objective(); },
-  undo() {
-    const r = game.repo.exec("git reset --hard HEAD~1");
-    term.print(r.lines.length ? r.lines : L("nothing to undo", "dim"));
+  undo() { term.print(game.repo.undo().lines); },
+  solution() {
+    const s = game.level.solution;
+    if (!s?.length) return term.print(L("sandbox has no solution — it's free play", "dim"));
+    game.usedSolution = true;
+    term.print([L("one possible solution — read it, don't just run it:", "warn"),
+                L("(peeking caps this run at ★)", "dim"),
+                ...s.map(c => L(`  ${c}`, "dim"))]);
   },
   reset() { startLevel(game.idx); term.print(L("level reset — fresh repo", "warn")); },
   map() { toSelect(); },
@@ -236,20 +248,22 @@ const term = new Term($("#terminal"), {
     if (!cmd) return;
     term.echo(cmd);
     const meta = META[cmd.split(/\s+/)[0]];
-    if (meta) { meta(); renderLive(); return; }
-    const res = game.repo.exec(cmd);
-    if (res.clear) term.clear();
-    if (res.lines?.length) term.print(res.lines);
-    if (!game.done) {
-      game.cmdCount++;
+    if (meta) meta();
+    else {
+      const res = game.repo.exec(cmd);
+      if (res.clear) term.clear();
+      if (res.lines?.length) term.print(res.lines);
       if (!res.ok) sfx.err(); else sfx.ok();
-      if (res.ok && game.idx !== -1 && game.repo.initialized &&
-          graphsEqual(game.repo, game.goal, !!game.level.strict)) {
+      // only effective commands count toward par — inspections and typos are free
+      if (res.ok && (res.changed || res.fs)) game.cmdCount++;
+    }
+    if (!game.done && game.idx !== -1 && game.repo.initialized) {
+      if (graphsEqual(game.repo, game.goal, !!game.level.strict)) {
         renderLive();
         setTimeout(win, 450);
         return;
       }
-      if (res.ok && game.idx !== -1 && !goalReachable(game.repo, game.goal, !!game.level.strict)) {
+      if (!goalReachable(game.repo, game.goal, !!game.level.strict)) {
         if (!game.divergedWarned) {
           term.print(L("⚠ this history can't grow into the target — `undo` steps back one commit, `reset` restarts the level", "warn"));
           game.divergedWarned = true;
@@ -296,6 +310,11 @@ $("#btn-sound").addEventListener("click", e => {
 });
 
 // ---------- modal ----------
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !$("#complete-modal").classList.contains("hidden"))
+    $("#btn-next").click();
+});
 
 $("#btn-replay").addEventListener("click", () => { $("#complete-modal").classList.add("hidden"); startLevel(game.idx); });
 $("#btn-tomap").addEventListener("click", () => { $("#complete-modal").classList.add("hidden"); toSelect(); });
