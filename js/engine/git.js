@@ -613,12 +613,32 @@ export class Repo {
     return ok(lines.length ? lines : [L("(no unstaged changes)", "dim")]);
   }
 
+  // commits reachable from branches, HEAD, tags, remote — the rest is garbage
+  reachable() {
+    const roots = [
+      ...this.branches.values(),
+      this.head.type === "detached" ? this.head.ref : null,
+      ...this.tags.values(),
+      ...(this.remote ? this.remote.branches.values() : []),
+    ].filter(Boolean);
+    const seen = new Set();
+    const stack = [...roots];
+    while (stack.length) {
+      const id = stack.pop();
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      for (const p of this.commits.get(id)?.parents ?? []) stack.push(p);
+    }
+    return seen;
+  }
+
   // ---------- graph view (for renderer + equality) ----------
 
   graphView() {
     const headC = this.headCommit();
+    const reach = this.reachable();
     return {
-      commits: this.order.map(id => {
+      commits: this.order.filter(id => reach.has(id)).map(id => {
         const c = this.commits.get(id);
         return { id, hash: c.hash, message: c.message, parents: [...c.parents], seq: c.seq, files: c.files };
       }),
@@ -645,4 +665,5 @@ export const HELP = [
   { text: "  git reset --hard <ref>    move back (HEAD~1 works)", cls: "" },
   { text: "  git tag <n> · git remote add · git push", cls: "" },
   { text: "  cat <f> · ls · rm <f> · git diff · clear", cls: "dim" },
+  { text: "  meta: hint · objective · undo · reset · map", cls: "dim" },
 ].map(l => L(l.text, l.cls));

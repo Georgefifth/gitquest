@@ -1,7 +1,7 @@
 // GitQuest — main glue: screens, level lifecycle, persistence.
 
 import { Repo } from "./engine/git.js";
-import { graphsEqual } from "./engine/check.js";
+import { graphsEqual, goalReachable } from "./engine/check.js";
 import { LEVELS, SANDBOX } from "./engine/levels.js";
 import { renderGraph } from "./ui/graph.js";
 import { Term } from "./ui/terminal.js";
@@ -111,7 +111,7 @@ function startLevel(idx) {
   const goal = new Repo();
   replayInto(goal, [...level.setup, ...level.solution], { silent: true });
 
-  game = { level, idx, repo, goal, cmdCount: 0, hintIdx: 0, done: false };
+  game = { level, idx, repo, goal, cmdCount: 0, hintIdx: 0, done: false, divergedWarned: false };
 
   // header
   $("#lvl-num").textContent = idx === -1 ? "∞" : `level ${String(idx + 1).padStart(2, "0")}/${LEVELS.length}`;
@@ -214,6 +214,10 @@ const META = {
     term.print(L("▸ " + (game.level.task || "free play"), "ok"));
   },
   goal() { META.objective(); },
+  undo() {
+    const r = game.repo.exec("git reset --hard HEAD~1");
+    term.print(r.lines.length ? r.lines : L("nothing to undo", "dim"));
+  },
   reset() { startLevel(game.idx); term.print(L("level reset — fresh repo", "warn")); },
   map() { toSelect(); },
   levels() { toSelect(); },
@@ -245,6 +249,12 @@ const term = new Term($("#terminal"), {
         setTimeout(win, 450);
         return;
       }
+      if (res.ok && game.idx !== -1 && !goalReachable(game.repo, game.goal)) {
+        if (!game.divergedWarned) {
+          term.print(L("⚠ this history can't grow into the target — `undo` steps back one commit, `reset` restarts the level", "warn"));
+          game.divergedWarned = true;
+        }
+      } else game.divergedWarned = false;
     }
     renderLive();
   },

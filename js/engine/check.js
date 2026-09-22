@@ -13,7 +13,7 @@ function fnv(str) {
 }
 
 export function commitSignatures(repo) {
-  // id -> structural signature
+  // id -> structural signature, over reachable commits only
   const memo = new Map();
   const sig = (id) => {
     if (memo.has(id)) return memo.get(id);
@@ -25,7 +25,7 @@ export function commitSignatures(repo) {
     memo.set(id, s);
     return s;
   };
-  for (const id of repo.commits.keys()) sig(id);
+  for (const id of repo.reachable()) sig(id);
   return memo;
 }
 
@@ -79,5 +79,20 @@ export function graphsEqual(a, b) {
     new Map([...rb].map(([n, t]) => [n, sigB.get(t)])),
   )) return false;
 
+  return true;
+}
+
+// Can the player's history still grow into the goal?
+// Commits are append-only (reachable ones), so the player's signature
+// multiset must be a sub-multiset of the goal's.
+export function goalReachable(player, goal) {
+  const sigG = commitSignatures(goal);
+  const budget = new Map();
+  for (const s of sigG.values()) budget.set(s, (budget.get(s) ?? 0) + 1);
+  for (const s of commitSignatures(player).values()) {
+    const n = budget.get(s) ?? 0;
+    if (n === 0) return false;
+    budget.set(s, n - 1);
+  }
   return true;
 }

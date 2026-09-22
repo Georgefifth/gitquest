@@ -1,6 +1,6 @@
 // node test/engine.test.mjs — engine + level solvability tests.
 import { Repo } from "../js/engine/git.js";
-import { graphsEqual } from "../js/engine/check.js";
+import { graphsEqual, goalReachable } from "../js/engine/check.js";
 import { LEVELS } from "../js/engine/levels.js";
 
 let pass = 0, fail = 0;
@@ -96,6 +96,28 @@ console.log("== rebase/reset/tag/push ==");
   run(p, ["git remote add origin https://x.dev/r.git"]);
   t("push", p.exec("git push origin main").ok &&
     p.remote.branches.get("main") === p.branches.get("main"));
+}
+
+console.log("== reachability / undo ==");
+{
+  // reset --hard orphans the tip commit → GC'd from view & equality
+  const a = build(["git init", "touch a", "git add a", 'git commit -m "1"',
+                   'echo "x" > a', "git add a", 'git commit -m "2"']);
+  run(a, ["git reset --hard HEAD~1"]);
+  const b = build(["git init", "touch a", "git add a", 'git commit -m "1"']);
+  t("reset erases orphan", graphsEqual(a, b));
+  t("graphView hides orphan", a.graphView().commits.length === 1);
+
+  // wrong extra commit → unreachable; after undo → reachable again
+  const goal = build(["git init", "touch good", "git add good", 'git commit -m "g"']);
+  const p = build(["git init", "touch good", "git add good", 'git commit -m "g"',
+                   "touch bad", "git add bad", 'git commit -m "oops"']);
+  t("diverged detected", !goalReachable(p, goal));
+  run(p, ["git reset --hard HEAD~1"]);
+  t("undo restores reachability", goalReachable(p, goal));
+
+  const sub = build(["git init", "touch good", "git add good", 'git commit -m "g"']);
+  t("subset reachable", goalReachable(build(["git init"]), goal) && goalReachable(sub, goal));
 }
 
 console.log("== levels solvable ==");
