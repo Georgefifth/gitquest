@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "JetBrains Mono","Fira Code",ui-monospace,Menlo,Consolas,monospace; }
+  .slide {
+    width: 1200px; height: 800px;
+    background: #0a0e0a; color: #b8f0b0;
+    position: relative; overflow: hidden;
+    padding: 80px 90px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .slide::before {
+    content: ""; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(58,255,110,.05) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(58,255,110,.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .slide::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.55));
+  }
+  .slide > * { position: relative; z-index: 1; }
+  .kicker { color: #5e8a58; letter-spacing: .45em; font-size: 20px; text-transform: uppercase; }
+  h1 { color: #3aff6e; font-size: 118px; margin: 18px 0; text-shadow: 0 0 30px rgba(58,255,110,.45); letter-spacing: .02em; }
+  .sub { font-size: 30px; line-height: 1.45; }
+  .dim { color: #5e8a58; }
+  .accent { color: #ffce4a; }
+  .graph { margin-top: 44px; font-size: 34px; white-space: pre; color: #5e8a58; }
+  .graph b { color: #ffce4a; } .graph .c { color: #45e0d8; }
+  .url { margin-top: 40px; color: #45e0d8; font-size: 26px; }
+</style>
+</head>
+<body>
+<div class="slide" id="thumb">
+  <div class="kicker">FirstCommit · a terminal adventure</div>
+  <h1>GITQUEST</h1>
+  <div class="sub">learn git by <span class="accent">playing</span> it<br>
+  <span class="dim">type real commands — watch history draw itself</span></div>
+  <div class="graph"><b>●</b>──<b>●</b>──<b>●</b>──<b>◆</b> main
+     ╰──<span class="c">●</span>──<span class="c">●</span> feature</div>
+  <div class="url">georgefifth.github.io/gitquest</div>
+</div>
+</body>
+</html>
