@@ -129,6 +129,8 @@ function startLevel(idx) {
   task.textContent = "▸ " + (level.task || "do whatever you like");
   $("#objective-text").append(brief, task);
 
+  delete $("#target-graph")._prevIds;
+  delete $("#live-graph")._prevIds;
   renderGraph($("#target-graph"), goal.graphView(), { emptyText: "target: an initialized… nothing yet" });
 
   // terminal
