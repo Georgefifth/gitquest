@@ -158,6 +158,7 @@ export const LEVELS = [
       "Merge `tuning` into `main`, survive the conflict, and resolve it\n" +
       "so that config.txt contains exactly: v2",
     task: "merge `tuning`, resolve the conflict → config.txt = \"v2\"",
+    strict: true, // resolution content is the point of this level
     setup: [
       "git init",
       "echo \"v1\" > config.txt",

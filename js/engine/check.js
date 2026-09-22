@@ -12,15 +12,19 @@ function fnv(str) {
   return (h >>> 0).toString(36);
 }
 
-export function commitSignatures(repo) {
-  // id -> structural signature, over reachable commits only
+export function commitSignatures(repo, strict = false) {
+  // id -> structural signature, over reachable commits only.
+  // strict mode also folds file names+contents into the signature —
+  // reserved for levels where resolution content is the point (e.g. conflicts).
   const memo = new Map();
   const sig = (id) => {
     if (memo.has(id)) return memo.get(id);
     const c = repo.commits.get(id);
     if (!c) return "∅";
     const ps = c.parents.map(sig).sort().join(",");
-    const fs = [...c.files.entries()].map(([k, v]) => `${k}=${v}`).sort().join("|");
+    const fs = strict
+      ? [...c.files.entries()].map(([k, v]) => `${k}=${v}`).sort().join("|")
+      : "";
     const s = fnv(`(${ps})[${fs}]`);
     memo.set(id, s);
     return s;
@@ -47,8 +51,8 @@ function mapEq(a, b) {
   return true;
 }
 
-export function graphsEqual(a, b) {
-  const sigA = commitSignatures(a), sigB = commitSignatures(b);
+export function graphsEqual(a, b, strict = false) {
+  const sigA = commitSignatures(a, strict), sigB = commitSignatures(b, strict);
   const s = id => sigA.get(id) ?? sigB.get(id) ?? "∅";
 
   // 1. same commit multiset
@@ -85,11 +89,11 @@ export function graphsEqual(a, b) {
 // Can the player's history still grow into the goal?
 // Commits are append-only (reachable ones), so the player's signature
 // multiset must be a sub-multiset of the goal's.
-export function goalReachable(player, goal) {
-  const sigG = commitSignatures(goal);
+export function goalReachable(player, goal, strict = false) {
+  const sigG = commitSignatures(goal, strict);
   const budget = new Map();
   for (const s of sigG.values()) budget.set(s, (budget.get(s) ?? 0) + 1);
-  for (const s of commitSignatures(player).values()) {
+  for (const s of commitSignatures(player, strict).values()) {
     const n = budget.get(s) ?? 0;
     if (n === 0) return false;
     budget.set(s, n - 1);

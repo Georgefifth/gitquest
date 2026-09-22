@@ -160,10 +160,9 @@ function renderLive() {
   const head = game.repo.head.type === "branch" ? game.repo.head.ref : game.repo.head.ref?.slice(0, 12);
   const safe = String(head ?? "?").replace(/[<>&"']/g, "");
   term.setPrompt(`~/repo${game.repo.initialized ? ` (${safe})` : ""}`);
-  $("#live-status").textContent =
-    game.idx !== -1 && graphsEqual(game.repo, game.goal) ? "● matches target" : "";
-  $("#live-status").className = "live-status" +
-    (game.idx !== -1 && graphsEqual(game.repo, game.goal) ? " match" : "");
+  const match = game.idx !== -1 && graphsEqual(game.repo, game.goal, !!game.level.strict);
+  $("#live-status").textContent = match ? "● matches target" : "";
+  $("#live-status").className = "live-status" + (match ? " match" : "");
 }
 
 function confetti() {
@@ -244,12 +243,13 @@ const term = new Term($("#terminal"), {
     if (!game.done) {
       game.cmdCount++;
       if (!res.ok) sfx.err(); else sfx.ok();
-      if (res.ok && game.idx !== -1 && game.repo.initialized && graphsEqual(game.repo, game.goal)) {
+      if (res.ok && game.idx !== -1 && game.repo.initialized &&
+          graphsEqual(game.repo, game.goal, !!game.level.strict)) {
         renderLive();
         setTimeout(win, 450);
         return;
       }
-      if (res.ok && game.idx !== -1 && !goalReachable(game.repo, game.goal)) {
+      if (res.ok && game.idx !== -1 && !goalReachable(game.repo, game.goal, !!game.level.strict)) {
         if (!game.divergedWarned) {
           term.print(L("⚠ this history can't grow into the target — `undo` steps back one commit, `reset` restarts the level", "warn"));
           game.divergedWarned = true;

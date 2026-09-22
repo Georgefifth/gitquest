@@ -53,8 +53,11 @@ test/engine.test.mjs  node-only tests
 ## Conventions
 
 - Engine code stays DOM-free so `node` can import it for tests.
-- Level completion = `graphsEqual(playerRepo, goalRepo)` where goalRepo =
-  `setup + solution` replayed on a fresh Repo. Never compare by command history.
+- Level completion = `graphsEqual(playerRepo, goalRepo, !!level.strict)` where
+  goalRepo = `setup + solution` replayed on a fresh Repo. Never compare by
+  command history. Default equality is topology-only (commits/branches/HEAD/
+  tags/remote); `strict: true` on a level also checks file names+contents —
+  use it only when the file payload is the point (e.g. conflict resolution).
 - New level = add entry to `LEVELS` in `js/engine/levels.js`. The test file
   automatically verifies every level is solvable by its `solution`.
 - Commit ids are display strings (`a1b2c3`); equality is purely structural.

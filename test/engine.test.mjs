@@ -120,14 +120,34 @@ console.log("== reachability / undo ==");
   t("subset reachable", goalReachable(build(["git init"]), goal) && goalReachable(sub, goal));
 }
 
+console.log("== strict vs topology equality ==");
+{
+  const a = build(["git init", "touch aaa", "git add aaa", 'git commit -m "one"']);
+  const b = build(["git init", "touch zzz", "git add zzz", 'git commit -m "two"']);
+  t("topology equal, filenames free", graphsEqual(a, b));
+  t("strict mode catches files", !graphsEqual(a, b, true));
+
+  const wrong = build([
+    "git init", 'echo "v1" > config.txt', "git add config.txt", 'git commit -m "v1 config"',
+    "git switch -c tuning", 'echo "v2-beta" > config.txt', "git add config.txt", 'git commit -m "experimental tuning"',
+    "git switch main", 'echo "v2-stable" > config.txt', "git add config.txt", 'git commit -m "stable config"',
+    "git merge tuning", 'echo "WRONG" > config.txt', "git add config.txt", 'git commit -m "merge tuning"',
+  ]);
+  const goal = build([...LEVELS.find(l => l.id === "conflict").setup,
+                      ...LEVELS.find(l => l.id === "conflict").solution]);
+  t("strict: bad resolution fails", !graphsEqual(wrong, goal, true));
+  t("non-strict: structure still passes", graphsEqual(wrong, goal));
+}
+
 console.log("== levels solvable ==");
 for (const lv of LEVELS) {
+  const strict = !!lv.strict;
   const start = build(lv.setup);
   const goal = build([...lv.setup, ...lv.solution]);
-  t(`${lv.id}: start ≠ goal`, lv.solution.length === 0 || !graphsEqual(start, goal));
+  t(`${lv.id}: start ≠ goal`, lv.solution.length === 0 || !graphsEqual(start, goal, strict));
   const player = build(lv.setup);
   run(player, lv.solution);
-  t(`${lv.id}: solution wins`, graphsEqual(player, goal));
+  t(`${lv.id}: solution wins`, graphsEqual(player, goal, strict));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
