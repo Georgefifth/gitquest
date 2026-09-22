@@ -5,6 +5,12 @@ git commands and watch an animated commit graph come alive. Built for the
 Beginner's Paradise — FirstCommit hackathon: a game about your first commit,
 built as our first commit.
 
+**▶ Play it live:** <https://georgefifth.github.io/gitquest/> ·
+**📼 Demo video:** [`demo.mp4`](./demo.mp4) (3 min, narrated) ·
+reviewers: append `?unlock` to open every level at once.
+
+![level select — a commit timeline](shots/02-select.png)
+
 ## How to play
 
 Each level hands you a broken (or empty) repository and a **target graph**.
